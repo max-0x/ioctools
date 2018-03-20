@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <!-- <link rel="icon" href="../../../../favicon.ico">-->
+
+    <title>IOC Parser</title>
+
+    <!-- Bootstrap core CSS -->
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- Custom styles for this template -->
+    <style type="text/css">
+      body {
+          padding-top: 3.5rem;
+        }   
+    </style>
+
+  </head>
+
+<body ng-app="myApp" ng-controller="myCtrl">
+
+
+    <nav class="navbar navbar-expand-md navbar-dark fixed-top bg-dark">
+      <a class="navbar-brand" href="#">IOC Parser</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault" aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+
+      <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+      </div>
+    </nav>
+
+    <main role="main">
+
+      <!-- Main jumbotron for a primary marketing message or call to action -->
+      <div class="jumbotron">
+        <div class="container">
+          <h1 class="display-3">IOC Parser</h1>
+          <p>Paste any data here and hit parse, you will find extracted indicator listed as IP, Mail, Hash, Domain and URL</p>
+          <textarea class="form-control" rows="10" ng-model="myTextarea"></textarea>
+          <br>
+          <button type="button" class="btn btn-primary btn-lg" ng-click="parseAll()">Parse!</button>
+        </div>
+      </div>
+
+      <div class="container">
+        <!-- Example row of columns -->
+        <div class="row">
+          <div class="col-md-12">
+          	<div class="scrolldown">
+          		<br>
+            	<h2>Extracted IOCs</h2>
+				
+					<table class="table table-hover">
+
+						<thead class="thead-light">
+						  <tr>
+						    <th scope="col">Indicator</th>
+						    <th scope="col">Type</th>
+						  </tr>
+					    </thead>
+
+					  	<tbody>
+							  <tr ng-repeat="(index, value) in parsedData.IP">
+							    <td>{{ value }}</td>
+							    <td> IP <td>
+							  </tr>
+							  <tr ng-repeat="(index, value) in parsedData.Mail">
+							    <td>{{ value }}</td>
+							    <td> Mail <td>
+							  </tr>
+							  <tr ng-repeat="(index, value) in parsedData.Hash">
+							    <td>{{ value }}</td>
+							    <td> Hash <td>
+							  </tr>
+							  <tr ng-repeat="(index, value) in parsedData.Domain">
+							    <td>{{ value }}</td>
+							    <td> Domain <td>
+							  </tr>
+							  <tr ng-repeat="(index, value) in parsedData.URL">
+							    <td>{{ value }}</td>
+							    <td> URL <td>
+							  </tr>
+						</tbody>
+
+					</table>
+			</div>
+	      </div>
+
+        </div>
+
+        <hr>
+
+      </div> <!-- /container -->
+
+    </main>
+
+    <footer class="container">
+      <p>&copy; max0x 2018-3018</p>
+    </footer>
+
+
+
+
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/lodash@4.17.5/lodash.min.js"></script>
+<script>
+
+const IP_Regex = /\b(?:(?:2(?:[0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9])(\[?)\.(\]?)){3}(?:(?:2([0-4][0-9]|5[0-5])|[0-1]?[0-9]?[0-9]))\b/gi;
+const Mail_Regex = /(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))/gi;
+const MD5_Hash_Regex = /\b[a-f0-9]{32}\b/gi;
+const SHA1_Hash_Regex = /\b[a-f0-9]{40}\b/gi;
+const SHA256_Hash_Regex = /\b[a-f0-9]{64}\b/gi;
+const Hash_Regex = /\b(([a-f0-9]{32})|([a-f0-9]{40})|([a-f0-9]{64})|([a-f0-9]{128}))\b/gi;
+const URL_Regex = /(https?|ftp|hxxps?|)((\[?)\:(\]?))\/\/(www(\[?)\.(\]?))?[-a-zA-Z0-9@:%._\+~#=]{2,256}((\[?)\.(\]?))?[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&\/\/=]{2,2000})/gim;
+const Domain_Regex = /\b((?=[a-z0-9-_]{1,63}(\[?)\.(\]?))(xn--)?[a-z0-9-_]+(-[a-z0-9]+)*(\[?)\.(\]?)?)+[a-z]{2,6}\b/gi;
+const Registry_Key_Regex = /((HKEY_CLASSES_ROOT|HKEY_CURRENT_USER|HKEY_LOCAL_MACHINE|HKEY_USERS|HKEY_CURRENT_CONFIG|REGISTRY|HKCU)\\[-a-zA-Z0-9@:%_\+.~#?&//=\\]*)/gim;
+const Twitter_ShortUrl_Regex = /https?:\/\/t\.co\/[a-z0-9]+/ig;
+
+$("button").click(function() {
+	if ($(".scrolldown").length){
+		console.log("here")
+		$('html,body').animate({
+	        scrollTop: $(".scrolldown").offset().top},
+	        'slow');
+	}
+});
+
+var app = angular.module('myApp', []);
+app.controller('myCtrl', function($scope) {
+
+	$scope.parsedData = {
+		IP: [],
+		Mail: [],
+		Hash: [],
+		Domain: [],
+		URL: []
+	}
+
+    $scope.myTextarea = ''
+    
+    $scope.parseAll = function() {
+        var inputData = $scope.myTextarea
+
+        // lowercase and clean up sanitization
+        inputData = inputData.toLowerCase();
+        inputData = inputData.replace(/[[\]]/g,'');  
+        inputData = inputData.replace(/(hxxp)((\[?)\:(\]?))?\/\//gi,'http://');
+        inputData = inputData.replace(/(hxxps)((\[?)\:(\]?))?\/\//gi,'https://');
+
+        parsedIP = inputData.match(IP_Regex);
+        parsedIP = _.uniq(parsedIP);
+        if (parsedIP){
+	        parsedIP.forEach(function(element) {
+	    		$scope.parsedData.IP.push(element);
+			});
+		}
+
+        parsedMail = inputData.match(Mail_Regex);
+        parsedMail = _.uniq(parsedMail);
+        if (parsedMail){
+	        parsedMail.forEach(function(element) {
+	    		$scope.parsedData.Mail.push(element);
+			});
+		}
+
+        parsedHash = inputData.match(Hash_Regex);
+        parsedHash = _.uniq(parsedHash);
+        if (parsedHash){
+        	parsedHash.forEach(function(element) {
+    			$scope.parsedData.Hash.push(element);
+			});
+        }
+
+        parsedDomain = inputData.match(Domain_Regex);
+        parsedDomain = _.uniq(parsedDomain);
+        if (parsedDomain){
+	        parsedDomain.forEach(function(element) {
+	    		$scope.parsedData.Domain.push(element);
+			});
+		}
+
+        parsedURL = inputData.match(URL_Regex);
+        parsedURL = _.uniq(parsedURL);
+        if (parsedURL){
+	        parsedURL.forEach(function(element) {
+	    		$scope.parsedData.URL.push(element);
+			});
+		}
+
+    }
+    
+});
+
+
+</script>
+
+</body>
+</html>
